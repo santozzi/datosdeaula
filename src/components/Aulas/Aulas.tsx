@@ -2,8 +2,24 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 
+interface reserva {
+	departamento:string;
+	anio: string;
+	perReserva: string;
+	comision: string;
+	materiaNumero: number;
+	materia: string;
+	diaReserva: string;
+	horaInicioReserva: string;
+	horaFinReserva: string;
+	aula: string;
+	edificio: string;
+	capacidad: number;
+}
+
 interface diasComplejo {
 	edificio: string;
+	aula: string;
 	lunes: boolean[];
 	martes: boolean[];
 	miercoles: boolean[];
@@ -17,6 +33,7 @@ const Aulas: React.FC  = () => {
 	const [disponibilidad, setDisponibilidad] = useState<diasComplejo[]>([
 		{
 			edificio: 'BIOLOGIA',
+			aula: '1',
 			lunes: [false, false, false, false, false, false, false, false, false, false, false, false,false, false, false, false, false, false, false, false, false, false, false, false],
 			martes: [false, false, false, false, false, false, false, false, false, false, false, false,false, false, false, false, false, false, false, false, false, false, false, false],
 			miercoles: [false, false, false, false, false, false, false, false, false, false, false, false,false, false, false, false, false, false, false, false, false, false, false, false],
@@ -26,6 +43,7 @@ const Aulas: React.FC  = () => {
 			domingo: [false, false, false, false, false, false, false, false, false, false, false, false,false, false, false, false, false, false, false, false, false, false, false, false],
 		},
 	]);
+	const [reservas, setReservas] = useState<reserva[]>([]);
 
 
 	
@@ -55,6 +73,12 @@ const Aulas: React.FC  = () => {
 	  } */
 
 	const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const departamento = 0;
+		const anio = 1;
+		const perReserva = 2;
+		const comision = 3;
+		const materiaNumero = 4;
+		const materia = 5;
 		const diaReserva = 8;
 		const horaInicioReserva = 9;
 		const horaFinReserva = 10;
@@ -79,11 +103,30 @@ const Aulas: React.FC  = () => {
 	      
 		   
 		   
+		   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 		   jsonData.forEach((row: any) => {
 			//el primiero es el encabezado
 
 			if(row[horaInicioReserva] != undefined && row[horaFinReserva]!= undefined && row[horaFinReserva].includes(":") ){
-	          if(row[aula]=='1' && row[diaReserva] == 'Lunes' && row[complejo] == 'BIOLOGIA'){
+	          	const rowData: reserva = {
+					departamento: row[departamento],
+					anio: row[anio],
+					perReserva: row[perReserva],
+					comision: row[comision],
+					materiaNumero: parseInt(row[materiaNumero]),
+					materia: row[materia],
+					diaReserva: row[diaReserva],
+					horaInicioReserva: row[horaInicioReserva],
+					horaFinReserva: row[horaFinReserva],
+					aula: row[aula],
+					edificio: row[complejo],
+					capacidad: parseInt(row[capacidad]),
+				};
+                //console.log("rowData", rowData);
+				reservas.push(rowData);
+				//setReservas((prevReservas) => [...prevReservas, rowData]); 
+
+			if(row[aula]=='1' && row[diaReserva] == 'Lunes' && row[complejo] == 'BIOLOGIA'){
 				//const horas = getTimeDifference(row[horaInicioReserva], row[horaFinReserva]);
 				let horaI = parseTimeStringToDate(row[horaInicioReserva]);
 				const horaF = parseTimeStringToDate(row[horaFinReserva]);
@@ -92,7 +135,7 @@ const Aulas: React.FC  = () => {
 					horaI++;
 				}
 				setDisponibilidad(disponibilidad);
-			    console.log(row[diaReserva], parseTimeStringToDate(row[horaInicioReserva]), parseTimeStringToDate(row[horaFinReserva]), row[aula], row[capacidad]);
+			    //console.log(row[diaReserva], parseTimeStringToDate(row[horaInicioReserva]), parseTimeStringToDate(row[horaFinReserva]), row[aula], row[capacidad]);
 			  
 			}
 			  
@@ -100,7 +143,7 @@ const Aulas: React.FC  = () => {
 			}
             
 		  }); 
-		  console.log("lunes", disponibilidad[0].lunes);
+		  console.log("Biologia", reservas.filter((reserva) => reserva.edificio === 'BIOLOGIA'));
 		  
 		};
 
@@ -109,7 +152,7 @@ const Aulas: React.FC  = () => {
 	return (
 		<div>
 			 <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
-			 {data.length > 0 && (
+			 {/* {data.length > 0 && (
         <table className="mt-4 border-collapse border border-gray-300">
           <thead>
             <tr>
@@ -132,7 +175,24 @@ const Aulas: React.FC  = () => {
             ))}
           </tbody>
         </table>
-      )}
+      )} */}
+	  {reservas.map((reserva, index) => (
+		<div key={index}>
+			<p>Departamento: {reserva.departamento}</p>
+			<p>Año: {reserva.anio}</p>
+			<p>Per Reserva: {reserva.perReserva}</p>
+			<p>Comisión: {reserva.comision}</p>
+			<p>Materia Número: {reserva.materiaNumero}</p>
+			<p>Materia: {reserva.materia}</p>
+			<p>Día Reserva: {reserva.diaReserva}</p>
+			<p>Hora Inicio Reserva: {reserva.horaInicioReserva}</p>
+			<p>Hora Fin Reserva: {reserva.horaFinReserva}</p>
+			<p>Aula: {reserva.aula}</p>
+			<p>Edificio: {reserva.edificio}</p>
+			<p>Capacidad: {reserva.capacidad}</p>
+			<hr />
+		</div>
+	  ))}
  		</div>
 	);
 };
