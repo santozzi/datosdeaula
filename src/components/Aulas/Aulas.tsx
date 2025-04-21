@@ -108,7 +108,8 @@ const Aulas: React.FC  = () => {
 			//el primiero es el encabezado
 
 			if(row[horaInicioReserva] != undefined && row[horaFinReserva]!= undefined && row[horaFinReserva].includes(":") ){
-	          	const rowData: reserva = {
+	            if(row[complejo]=='BIOLOGIA' && row[aula]=='1'){
+				const rowData: reserva = {
 					departamento: row[departamento],
 					anio: row[anio],
 					perReserva: row[perReserva],
@@ -125,7 +126,7 @@ const Aulas: React.FC  = () => {
                 //console.log("rowData", rowData);
 				reservas.push(rowData);
 				//setReservas((prevReservas) => [...prevReservas, rowData]); 
-
+			}
 			if(row[aula]=='1' && row[diaReserva] == 'Lunes' && row[complejo] == 'BIOLOGIA'){
 				//const horas = getTimeDifference(row[horaInicioReserva], row[horaFinReserva]);
 				let horaI = parseTimeStringToDate(row[horaInicioReserva]);
@@ -176,20 +177,15 @@ const Aulas: React.FC  = () => {
           </tbody>
         </table>
       )} */}
+	  
 	  {reservas.map((reserva, index) => (
 		<div key={index}>
-			<p>Departamento: {reserva.departamento}</p>
-			<p>Año: {reserva.anio}</p>
-			<p>Per Reserva: {reserva.perReserva}</p>
-			<p>Comisión: {reserva.comision}</p>
-			<p>Materia Número: {reserva.materiaNumero}</p>
-			<p>Materia: {reserva.materia}</p>
-			<p>Día Reserva: {reserva.diaReserva}</p>
-			<p>Hora Inicio Reserva: {reserva.horaInicioReserva}</p>
-			<p>Hora Fin Reserva: {reserva.horaFinReserva}</p>
-			<p>Aula: {reserva.aula}</p>
-			<p>Edificio: {reserva.edificio}</p>
-			<p>Capacidad: {reserva.capacidad}</p>
+			<p>{reserva.diaReserva} |
+			{reserva.horaInicioReserva} |
+			{reserva.horaFinReserva}  |           
+			{reserva.aula}      |      
+			{reserva.edificio}|
+			{reserva.capacidad}</p>
 			<hr />
 		</div>
 	  ))}

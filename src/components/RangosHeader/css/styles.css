@@ -1,0 +1,24 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+.rango-container-header{
+    display: flex;
+  
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    height: 100%;
+}
+.rango-header{
+    text-align: center;
+    color: red;
+    border: solid 1px red;
+    width: 25px;
+
+}
+.ocupado{
+    background-color: red;
+}

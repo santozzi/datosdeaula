@@ -1,14 +1,17 @@
 
 
 import './App.css'
-import { Aulas } from './components/Aulas'
+
+import { Rangos } from './components/Rangos'
+import RangosHeader from './components/RangosHeader/RangosHeader'
 
 function App() {
 
 
   return (
     <>
-     <Aulas />
+     <RangosHeader />
+     <Rangos />
     </>
   )
 }
