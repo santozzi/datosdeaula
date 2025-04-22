@@ -250,3 +250,9 @@ export interface AulaReserva {
         });
         return reservasFiltradas; 
       }
+      export const filtrarPorHora = (hora:number, arreglo:AulaReserva[])=>{
+        const reservasFiltradas = arreglo.filter((reserva) =>{
+            return !reserva.lunes[hora] || !reserva.martes[hora] || !reserva.miercoles[hora] || !reserva.jueves[hora] || !reserva.viernes[hora] || !reserva.sabado[hora] || !reserva.domingo[hora];
+        });
+        return reservasFiltradas; 
+      }
