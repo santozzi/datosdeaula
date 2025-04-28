@@ -21,11 +21,30 @@
   height:50px;
   border:solid 1px #2e2e31;
 }
+.container-principal{
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: column;
+  
+
+}
 .container{
   display: flex;
   justify-content: flex-start;
   align-items: center;
  
+}
+.checkboxs{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.1rem;
+  margin-left: 2.5rem;
+}
+.checkboxs input[type="checkbox"]{
+ 
+  margin:0;
 }
 .rojo{
   background-color: #ff0000;
