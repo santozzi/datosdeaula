@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import { HorasCheckbox } from "../App";
 
 async function obtenerArchivo(ruta:string) {
   const response = await fetch(ruta);
@@ -12,7 +13,7 @@ export interface aulaSeparadaPorDia {
     edificio: string;
     periodo: string;
     capacidad: number;
-    diaReservaArray: boolean[];
+    diaReservaArray:PeriodoReserva[];
 
 }
 export interface reserva {
@@ -107,7 +108,11 @@ export const unirExcels = async ()=> {
     });    
 };
 
+export interface PeriodoReserva{
+  periodo: string;
+  reservado: boolean;
 
+}
 export const pasarAReservasArray = async () => {
   const reservas: reserva[] = [];
   const departamento = 0;
@@ -135,7 +140,8 @@ export const pasarAReservasArray = async () => {
     if (
       row[horaInicioReserva] != undefined &&
       row[horaFinReserva] != undefined &&
-      row[horaFinReserva].includes(":")
+      row[horaFinReserva].includes(":") &&
+      row[complejo] !== "s/d" 
     ) {
       const rowData: reserva = {
         departamento: row[departamento],
@@ -182,22 +188,22 @@ export const pasarAAulaReservaArrayPorDia = async () => {
       console.error("No data found");
       return;
     }
+
     reservas.forEach((reserva: reserva) => {
       const aulasReserva = aulasReservas.find(
         (aulaReserva) =>
           aulaReserva.aula === reserva.aula &&
           aulaReserva.edificio === reserva.edificio &&
-          aulaReserva.diaDeLaSemana === reserva.diaReserva &&
-          aulaReserva.periodo === reserva.perReserva &&
-          aulaReserva.edificio !== "s/d" 
-          
+          aulaReserva.diaDeLaSemana === reserva.diaReserva 
       );
-      console.log(aulasReserva);
+
+      
       
       if (!aulasReserva) {
+       
         const { edificio, aula, capacidad,diaReserva, perReserva } = reserva;
 
-        const diaReservaArray = new Array(24).fill(false);
+        const diaReservaArray = new Array(24).fill({periodo:perReserva,resercado:false});
 
   
         aulasReservas.push({
@@ -210,6 +216,7 @@ export const pasarAAulaReservaArrayPorDia = async () => {
  
         });
       } else {
+       
         const { diaReserva, horaInicioReserva, horaFinReserva } = reserva;
         aulasReserva.diaDeLaSemana = diaReserva;
         aulasReserva.aula = reserva.aula;
@@ -224,7 +231,7 @@ export const pasarAAulaReservaArrayPorDia = async () => {
               i < parseInt(horaFinReserva);
               i++
             ) {
-                aulasReserva.diaReservaArray[i] = true;
+                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
             }
             break;
           case "Martes":
@@ -233,7 +240,7 @@ export const pasarAAulaReservaArrayPorDia = async () => {
               i < parseInt(horaFinReserva);
               i++
             ) {
-                aulasReserva.diaReservaArray[i] = true;
+                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
             }
             break;
           case "Miercoles":
@@ -242,7 +249,7 @@ export const pasarAAulaReservaArrayPorDia = async () => {
               i < parseInt(horaFinReserva);
               i++
             ) {
-                aulasReserva.diaReservaArray[i] = true;
+                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
             }
             break;
           case "Jueves":
@@ -251,7 +258,7 @@ export const pasarAAulaReservaArrayPorDia = async () => {
               i < parseInt(horaFinReserva);
               i++
             ) {
-                aulasReserva.diaReservaArray[i] = true;
+                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
             }
             break;
           case "Viernes":
@@ -260,7 +267,7 @@ export const pasarAAulaReservaArrayPorDia = async () => {
               i < parseInt(horaFinReserva);
               i++
             ) {
-                aulasReserva.diaReservaArray[i] = true;
+                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
             }
             break;
           case "Sabado":
@@ -269,7 +276,7 @@ export const pasarAAulaReservaArrayPorDia = async () => {
               i < parseInt(horaFinReserva);
               i++
             ) {
-                aulasReserva.diaReservaArray[i] = true;
+                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
             }
             break;
           case "Domingo":
@@ -278,7 +285,7 @@ export const pasarAAulaReservaArrayPorDia = async () => {
               i < parseInt(horaFinReserva);
               i++
             ) {
-                aulasReserva.diaReservaArray[i] = true;
+                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
             }
             break;
           default:
@@ -442,14 +449,70 @@ export const filtroPorDia = (dia: string, arreglo: AulaReserva[]) => {
   });
   return reservasFiltradas;
 };
+
+
+
+
 export const filtrarPorHora = (hora: number, arreglo: aulaSeparadaPorDia[]) => {
   const reservasFiltradas = arreglo.filter((reserva) => {
     return (
-      !reserva.diaReservaArray[hora]
+      !reserva.diaReservaArray[hora].reservado
     );
   });
   return reservasFiltradas;
 };
+
+export const filtrarPorHoraCheckbox = (hora:HorasCheckbox, arreglo: aulaSeparadaPorDia[]) => {
+  let reservasFiltradas:aulaSeparadaPorDia[] = arreglo;
+  if(hora.hora8){
+     reservasFiltradas = filtrarPorHora(8,reservasFiltradas);
+  }
+  if(hora.hora9){
+     reservasFiltradas = filtrarPorHora(9,reservasFiltradas);
+  }
+  if(hora.hora10){
+     reservasFiltradas = filtrarPorHora(10,reservasFiltradas);
+  }
+  if(hora.hora11){
+     reservasFiltradas = filtrarPorHora(11,reservasFiltradas);
+  }
+  if(hora.hora12){
+     reservasFiltradas = filtrarPorHora(12,reservasFiltradas);
+  }
+  if(hora.hora13){
+     reservasFiltradas = filtrarPorHora(13,reservasFiltradas);
+  }
+  if(hora.hora14){
+     reservasFiltradas = filtrarPorHora(14,reservasFiltradas);
+  }
+  if(hora.hora15){
+     reservasFiltradas = filtrarPorHora(15,reservasFiltradas);
+  }
+  if(hora.hora16){
+     reservasFiltradas = filtrarPorHora(16,reservasFiltradas);
+  }
+  if(hora.hora17){
+     reservasFiltradas = filtrarPorHora(17,reservasFiltradas);
+  }
+  if(hora.hora18){
+     reservasFiltradas = filtrarPorHora(18,reservasFiltradas);
+  }
+  if(hora.hora19){
+     reservasFiltradas = filtrarPorHora(19,reservasFiltradas);
+  }
+  if(hora.hora20){
+     reservasFiltradas = filtrarPorHora(20,reservasFiltradas);
+  }
+  if(hora.hora21){
+     reservasFiltradas = filtrarPorHora(21,reservasFiltradas);
+  }
+  if(hora.hora22){
+     reservasFiltradas = filtrarPorHora(22,reservasFiltradas);
+  }
+
+  return reservasFiltradas
+}
+
 export const filtroPorHoraYDia = (
   hora: number,
   dia: string,
