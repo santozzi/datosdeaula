@@ -16,7 +16,9 @@ import {
   filtrarPorPeriodo,
   PeriodoReserva,
   filtrarPorHoraCheckbox,
+  obtenerEdificios,
 } from "./models/aula.model.ts";
+import React from "react";
 export interface HorasCheckbox {
   hora8: boolean;
   hora9: boolean;
@@ -38,6 +40,9 @@ function App() {
   const [aulas, setAulas] = useState<AulaReserva[]>([]);
   const [periodo, setPeriodo] = useState<string>("");
   const [aulaReserva, setAulaReserva] = useState<aulaSeparadaPorDia[]>([]);
+  const [edificio, setEdificio] = useState<string>("");
+  const [aula, setAula] = useState<string>("");
+  const [edificios, setEdificios] = useState<string[]>([]);
   const [diaDelaSemana, setDiaDelaSemana] = useState<string>("");
   const [hora, setHora] = useState<HorasCheckbox>({
     hora8: false,
@@ -56,6 +61,29 @@ function App() {
     hora21: false,
     hora22: false,
   });
+  const [files, setFiles] = useState<FileList | null>(null);
+
+  const handleEdificio = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    
+
+    setEdificio(value);
+  }
+
+  const handleDias = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    console.log("valor", value);
+
+    setDiaDelaSemana(value);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files: FileList | null = event.target.files;
+    if (files && files.length > 0) {
+      setFiles(files);
+    }
+  };
+
   const handleHora = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setHora((prevState) => ({
@@ -64,11 +92,21 @@ function App() {
     }));
   };
   useEffect(() => {
-    pasarAAulaReservaArrayPorDia()
+    if (files == null) return;
+    //const filesArray = Array.from(files);
+    obtenerEdificios(files).then((edificios) => {
+      if(edificios != undefined)
+          setEdificios(edificios);
+    }
+    );
+    pasarAAulaReservaArrayPorDia(files)
       .then((aula: any) => {
-        
         //console.log("reservas", aula);
-        const reservasFiltradas = filtrarPorEdificio("BIOLOGIA", aula);
+
+        let reservasFiltradas:aulaSeparadaPorDia[] = aula;
+        if (edificio != "") {
+          reservasFiltradas = filtrarPorEdificio(edificio, reservasFiltradas);
+        } 
         // console.log("reservasFiltradas", reservasFiltradas);
         /* 
         const reservasFiltradasPorAula = filtrarPorAula("1", reservasFiltradas);
@@ -80,76 +118,144 @@ function App() {
         );
         console.log("reservasFiltradasPorDia", reservasFiltradasPorDia);
         setAulas(filtrarPorHora(14,filtrarPorHora(13,filtrarPorHora(12,aula)))); */
-        setAulaReserva(filtrarPorHoraCheckbox(hora, aula));
-       
+        
+        const aulaencontrada= reservasFiltradas.filter((aula) => {
+          return aula.aula == "16" && aula.diaDeLaSemana == "Miércoles" && aula.edificio == "PALIHUE - COMPLEJO NUEVO";
+        })
+        console.log("aulaencontrada", aulaencontrada);
+        
+        if(aulaencontrada != undefined)
+          setAulaReserva(aulaencontrada);
+      
+        
+        
+        
+        
+        
+        
+        
+        
         //setAulaReserva(filtrarPorAula("11", reservasFiltradas));
       })
 
       .catch((error) => {
         console.error("Error al pasar a reservas array:", error);
       });
-  }, [hora]);
+  }, [hora, files,edificio]);
 
   return (
     <div className="container-principal">
       {/*      <RangosHeader />
      <Rangos /> */}
-      <div className="checkboxs">
-        <input type="checkbox" name="hora8" id="8" onChange={handleHora} />
-        <input type="checkbox" name="hora9" id="9" onChange={handleHora} />
-        <input type="checkbox" name="hora10" id="10" onChange={handleHora} />
-        <input type="checkbox" name="hora11" id="11" onChange={handleHora} />
-        <input type="checkbox" name="hora12" id="12" onChange={handleHora} />
-        <input type="checkbox" name="hora13" id="13" onChange={handleHora} />
-        <input type="checkbox" name="hora14" id="14" onChange={handleHora} />
-        <input type="checkbox" name="hora15" id="15" onChange={handleHora} />
-        <input type="checkbox" name="hora16" id="16" onChange={handleHora} />
-        <input type="checkbox" name="hora17" id="17" onChange={handleHora} />
-        <input type="checkbox" name="hora18" id="18" onChange={handleHora} />
-        <input type="checkbox" name="hora19" id="19" onChange={handleHora} />
-        <input type="checkbox" name="hora20" id="20" onChange={handleHora} />
-        <input type="checkbox" name="hora21" id="21" onChange={handleHora} />
-        <input type="checkbox" name="hora22" id="22" onChange={handleHora} />
+     
+      <div className="herramientas"> 
+        <div className="colores">
+          <div className="color pc-color">Primer Cuatrimestre</div>
+          <div className="color anual-color">Anual</div>
+          <div className="color semanal-color">Semanal</div>
+          <div className="color libre-color">Libre</div>
+        </div>
+        <input
+          type="file"
+          name="file"
+          id="file"
+          multiple
+          accept=".xls"
+          onChange={handleFileChange}
+        />
+        <label htmlFor="edificios">Edificio</label>
+        <select name="edificios" id="edificios" onChange={handleEdificio}>
+        <option value="">Seleccione un edificio</option>
+          {
+            edificios.map((edificio, index) => {
+              return (
+                <option key={"edificio"+index} value={edificio}>
+                  {edificio}
+                </option>
+              );
+            })}
+
+         </select>
+        <select name="dias" id="dias" onChange={handleDias}>
+          <option value="">Seleccione un dia</option>
+          <option value="Lunes">Lunes</option>
+          <option value="Martes">Martes</option>
+          <option value="Miércoles">Miércoles</option>
+          <option value="Jueves">Jueves</option>
+          <option value="Viernes">Viernes</option>
+        </select>
+   
+        <div className="checkboxs">
+          <input type="checkbox" name="hora8" id="8" onChange={handleHora} />
+          <input type="checkbox" name="hora9" id="9" onChange={handleHora} />
+          <input type="checkbox" name="hora10" id="10" onChange={handleHora} />
+          <input type="checkbox" name="hora11" id="11" onChange={handleHora} />
+          <input type="checkbox" name="hora12" id="12" onChange={handleHora} />
+          <input type="checkbox" name="hora13" id="13" onChange={handleHora} />
+          <input type="checkbox" name="hora14" id="14" onChange={handleHora} />
+          <input type="checkbox" name="hora15" id="15" onChange={handleHora} />
+          <input type="checkbox" name="hora16" id="16" onChange={handleHora} />
+          <input type="checkbox" name="hora17" id="17" onChange={handleHora} />
+          <input type="checkbox" name="hora18" id="18" onChange={handleHora} />
+          <input type="checkbox" name="hora19" id="19" onChange={handleHora} />
+          <input type="checkbox" name="hora20" id="20" onChange={handleHora} />
+          <input type="checkbox" name="hora21" id="21" onChange={handleHora} />
+          <input type="checkbox" name="hora22" id="22" onChange={handleHora} />
+        </div>
       </div>
-      {aulaReserva.map((aula: aulaSeparadaPorDia, index) => {
-        return (
-          <div key={index} className="container">
-            <div className="detalles">
-              <div>{aula.aula}</div>
-              <div>{aula.edificio}</div>
-              <div>{aula.diaDeLaSemana}</div>
-            </div>
+
+      {files != null &&
+        aulaReserva.map((aula: aulaSeparadaPorDia, index) => {
+          return (
+            <React.Fragment key={"aulas" + index}>
             {(aula.diaDeLaSemana == diaDelaSemana || diaDelaSemana == "") && (
-              <div className="reserva">
-                {aula.diaReservaArray.map((reserva: PeriodoReserva, index) => {
-                  return (
-                    (index > 7 &&
-                      index < 23) &&
-                    <div key={index}>
-                      {
-                        (reserva.reservado ? (
-                          <div
-                            className={`cuadro ${
-                              reserva.periodo == "Primer Cuatrimestre"
-                                ? "pc-color"
-                                : reserva.periodo == "Anual"
-                                ? "anual-color"
-                                : "semanal-color"
-                            }`}
-                          >
-                            {index}
-                          </div>
-                        ) : (
-                          <div className="cuadro libre-color">{index}</div>
-                        ))}
-                    </div>
-                  );
-                })}
+            <div key={"aula"+index} className="container">
+       
+              <div className="detalles">
+                <div className="lugar">
+                  <div>Aula: {aula.aula}</div>
+                  <div>Edificio:{aula.edificio}</div>
+                </div>
+                <div>
+                  <div>{aula.diaDeLaSemana}</div>
+                  <div>cap:{aula.capacidad}</div>
+                </div>
               </div>
-            )}
-          </div>
-        );
-      })}
+              
+                <div className="reserva">
+                  {aula.diaReservaArray.map(
+                    (reserva: PeriodoReserva, index) => {
+                      return (
+                        index > 7 &&
+                        index < 23 && (
+                          <div key={"reserva"+index}>
+                            {reserva.reservado ? (
+                              <div
+                                className={`cuadro ${
+                                  reserva.periodo == "Primer Cuatrimestre"
+                                    ? "pc-color"
+                                    : reserva.periodo == "Anual"
+                                    ? "anual-color"
+                                    : "semanal-color"
+                                }`}
+                              >
+                                {index}
+                              </div>
+                            ) : (
+                              <div className="cuadro libre-color">{index}</div>
+                            )}
+                          </div>
+                        )
+                      );
+                    }
+                  )}
+                </div>
+             
+            </div> 
+          )}
+            </React.Fragment>
+          );
+        })}
     </div>
   );
 }

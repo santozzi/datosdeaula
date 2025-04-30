@@ -41,7 +41,7 @@ export interface AulaReserva {
   aula: string;
   lunes: boolean[];
   martes: boolean[];
-  miercoles: boolean[];
+  Miércoles: boolean[];
   jueves: boolean[];
   viernes: boolean[];
   sabado: boolean[];
@@ -54,12 +54,24 @@ export interface AulaReserva {
     date.setHours(hours, minutes, seconds, 0);
     return hours;
   } */
-
-export const extraerXls = async (ruta:string): Promise<unknown[][] | undefined> => {
+    const departamento = 0;
+    const anio = 1;
+    const perReserva = 2;
+    const comision = 3;
+    const materiaNumero = 4;
+    const materia = 5;
+    const diaReserva = 8;
+    const horaInicioReserva = 9;
+    const horaFinReserva = 10;
+    const aula = 11;
+    const complejo = 12;
+    const capacidad = 13;
+export const extraerXls = async (file:File ): Promise<unknown[][] | undefined> => {
     
-  const file = await obtenerArchivo(ruta);
+  //const file = await obtenerArchivo(ruta);
 
-  if (!file) return;
+  
+  if (!file || file == undefined) return;
 
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -85,23 +97,57 @@ export const extraerXls = async (ruta:string): Promise<unknown[][] | undefined> 
 };
 
 
-export const unirExcels = async ()=> {
+
+
+
+export const obtenerEdificios = async (files:FileList) => {
+  const edificios: string[] = [];
+
+  const jsonData = await unirExcels(files);
+
+  if (jsonData === undefined || jsonData === null) {
+    console.error("No data found");
+    return;
+  }
+  jsonData.forEach((row: any) => {
+    //el primiero es el encabezado
+    if (row[complejo] != undefined && row[complejo] !== "s/d") {
+      if (!edificios.includes(row[complejo])) {
+        edificios.push(row[12]);
+      }
+    }
+  });
+  return edificios;
+}
+
+
+
+
+
+
+
+
+export const unirExcels = async (files:FileList)=> {
    
     let contenedor:unknown[][] = [];
         
-    const archivos = [
+/*     const archivos = [
         "./asignacion_aulas_Anual-2025 (1).xls",
         "./asignacion_aulas_PrimerCuatrimestre-2025 (1).xls",
         "./asignacion_aulas_Semanal-2025 (3).xls",
         "./asignacionaulas2025.xls",
-       ];
-        for (const archivo of archivos) {
-            const file = await obtenerArchivo(archivo);
-            if (!file) return;
-            const nuevoExcel = await extraerXls(archivo);
+       ]; */
+        for (let i=0 ; i< files.length; i++ ) {
+            //const file = await obtenerArchivo(archivo);
+            if (!files) return;
+            const nuevoExcel = await extraerXls(files[i]);
+         
+            
+            
             if(!nuevoExcel) return;
             contenedor = [...contenedor, ...nuevoExcel];
         }
+
     return new Promise<unknown[][]>( (resolve, reject) => {
         
             resolve(contenedor);
@@ -113,23 +159,12 @@ export interface PeriodoReserva{
   reservado: boolean;
 
 }
-export const pasarAReservasArray = async () => {
+export const pasarAReservasArray = async (files:FileList) => {
   const reservas: reserva[] = [];
-  const departamento = 0;
-  const anio = 1;
-  const perReserva = 2;
-  const comision = 3;
-  const materiaNumero = 4;
-  const materia = 5;
-  const diaReserva = 8;
-  const horaInicioReserva = 9;
-  const horaFinReserva = 10;
-  const aula = 11;
-  const complejo = 12;
-  const capacidad = 13;
 
-  const jsonData = await unirExcels();
-  console.log("tipo de json", typeof jsonData);
+
+  const jsonData = await unirExcels(files);
+
   if (jsonData === undefined || jsonData === null) {
     console.error("No data found");
     return;
@@ -180,10 +215,13 @@ export const pasarAReservasArray = async () => {
   return reservas;
 };
 
-export const pasarAAulaReservaArrayPorDia = async () => {
+export const pasarAAulaReservaArrayPorDia = async (files:FileList) => {
     const aulasReservas: aulaSeparadaPorDia[] = [];
+    
+    
+    const reservas = await pasarAReservasArray(files);
 
-    const reservas = await pasarAReservasArray();
+    
     if (reservas === undefined) {
       console.error("No data found");
       return;
@@ -192,18 +230,19 @@ export const pasarAAulaReservaArrayPorDia = async () => {
     reservas.forEach((reserva: reserva) => {
       const aulasReserva = aulasReservas.find(
         (aulaReserva) =>
-          aulaReserva.aula === reserva.aula &&
           aulaReserva.edificio === reserva.edificio &&
+          aulaReserva.aula === reserva.aula &&
+          
           aulaReserva.diaDeLaSemana === reserva.diaReserva 
+        
       );
 
-      
       
       if (!aulasReserva) {
        
         const { edificio, aula, capacidad,diaReserva, perReserva } = reserva;
 
-        const diaReservaArray = new Array(24).fill({periodo:perReserva,resercado:false});
+        const diaReservaArray = new Array(24).fill({periodo:perReserva,reservado:false});
 
   
         aulasReservas.push({
@@ -219,6 +258,8 @@ export const pasarAAulaReservaArrayPorDia = async () => {
        
         const { diaReserva, horaInicioReserva, horaFinReserva } = reserva;
         aulasReserva.diaDeLaSemana = diaReserva;
+       
+        
         aulasReserva.aula = reserva.aula;
         aulasReserva.edificio = reserva.edificio;
         aulasReserva.capacidad = reserva.capacidad;
@@ -243,14 +284,27 @@ export const pasarAAulaReservaArrayPorDia = async () => {
                 aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
             }
             break;
-          case "Miercoles":
+          case "Miércoles":{
+           
             for (
+
               let i = parseInt(horaInicioReserva);
               i < parseInt(horaFinReserva);
               i++
             ) {
+            
+               
+            
                 aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
             }
+ /*            if(aulasReserva.aula == '16' && aulasReserva.edificio == 'PALIHUE - COMPLEJO NUEVO'){
+            console.log(aulasReserva.diaReservaArray);
+            } */
+            
+            
+          }
+
+            
             break;
           case "Jueves":
             for (
@@ -298,9 +352,9 @@ export const pasarAAulaReservaArrayPorDia = async () => {
   
 
 
-export const pasarAAulaReservaArray = async () => {
+export const pasarAAulaReservaArray = async (files:FileList) => {
   const aulasReservas: AulaReserva[] = [];
-  const reservas = await pasarAReservasArray();
+  const reservas = await pasarAReservasArray(files);
   if (reservas === undefined) {
     console.error("No data found");
     return;
@@ -315,7 +369,7 @@ export const pasarAAulaReservaArray = async () => {
       const { edificio, aula, capacidad, comision, diaReserva,materia,perReserva } = reserva;
       const lunes = new Array(24).fill(false);
       const martes = new Array(24).fill(false);
-      const miercoles = new Array(24).fill(false);
+      const Miércoles = new Array(24).fill(false);
       const jueves = new Array(24).fill(false);
       const viernes = new Array(24).fill(false);
       const sabado = new Array(24).fill(false);
@@ -331,7 +385,7 @@ export const pasarAAulaReservaArray = async () => {
         aula,
         lunes,
         martes,
-        miercoles,
+        Miércoles,
         jueves,
         viernes,
         sabado,
@@ -358,13 +412,13 @@ export const pasarAAulaReservaArray = async () => {
             aulaReserva.martes[i] = true;
           }
           break;
-        case "Miercoles":
+        case "Miércoles":
           for (
             let i = parseInt(horaInicioReserva);
             i < parseInt(horaFinReserva);
             i++
           ) {
-            aulaReserva.miercoles[i] = true;
+            aulaReserva.Miércoles[i] = true;
           }
           break;
         case "Jueves":
@@ -433,8 +487,8 @@ export const filtroPorDia = (dia: string, arreglo: AulaReserva[]) => {
         return reserva.lunes;
       case "Martes":
         return reserva.martes;
-      case "Miercoles":
-        return reserva.miercoles;
+      case "Miércoles":
+        return reserva.Miércoles;
       case "Jueves":
         return reserva.jueves;
       case "Viernes":
@@ -524,8 +578,8 @@ export const filtroPorHoraYDia = (
         return !reserva.lunes[hora];
       case "Martes":
         return !reserva.martes[hora];
-      case "Miercoles":
-        return !reserva.miercoles[hora];
+      case "Miércoles":
+        return !reserva.Miércoles[hora];
       case "Jueves":
         return !reserva.jueves[hora];
       case "Viernes":
