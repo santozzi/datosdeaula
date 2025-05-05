@@ -72,7 +72,7 @@ function App() {
 
   const handleDias = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { value } = e.target;
-    console.log("valor", value);
+
 
     setDiaDelaSemana(value);
   };
@@ -112,19 +112,12 @@ function App() {
         const aulaencontrada= reservasFiltradas.filter((aula) => {
           return aula.aula == "16" && aula.diaDeLaSemana == "Miércoles" && aula.edificio == "PALIHUE - COMPLEJO NUEVO";
         })
-        console.log("aulaencontrada en app.tsx", aulaencontrada);
+       
         
         if(aulaencontrada != undefined)
           setAulaReserva(reservasFiltradas);
       
-        
-        
-        
-        
-        
-        
-        
-        
+  
         //setAulaReserva(filtrarPorAula("11", reservasFiltradas));
       })
 
@@ -153,7 +146,8 @@ function App() {
           accept=".xls"
           onChange={handleFileChange}
         />
-        <label htmlFor="edificios">Edificio</label>
+        <div className="edificios-dias">
+    
         <select name="edificios" id="edificios" onChange={handleEdificio}>
         <option value="">Seleccione un edificio</option>
           {
@@ -173,24 +167,71 @@ function App() {
           <option value="Miércoles">Miércoles</option>
           <option value="Jueves">Jueves</option>
           <option value="Viernes">Viernes</option>
+          <option value="Sábado">Sábado</option>
         </select>
-   
+        </div>
         <div className="checkboxs">
+          <div className="input-label">
+          <label htmlFor="hora8">8</label>
           <input type="checkbox" name="hora8" id="8" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+
+          <label htmlFor="hora9">9</label>
           <input type="checkbox" name="hora9" id="9" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora10">10</label>
           <input type="checkbox" name="hora10" id="10" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora11">11</label>
           <input type="checkbox" name="hora11" id="11" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora12">12</label>
           <input type="checkbox" name="hora12" id="12" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora13">13</label>
           <input type="checkbox" name="hora13" id="13" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora14">14</label>
           <input type="checkbox" name="hora14" id="14" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora15">15</label>
           <input type="checkbox" name="hora15" id="15" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora16">16</label>
           <input type="checkbox" name="hora16" id="16" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora17">17</label>
           <input type="checkbox" name="hora17" id="17" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora18">18</label>
           <input type="checkbox" name="hora18" id="18" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora19">19</label>
           <input type="checkbox" name="hora19" id="19" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora20">20</label>
           <input type="checkbox" name="hora20" id="20" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora21">21</label>
           <input type="checkbox" name="hora21" id="21" onChange={handleHora} />
+          </div>
+          <div className="input-label">
+          <label htmlFor="hora22">22</label>
           <input type="checkbox" name="hora22" id="22" onChange={handleHora} />
+          </div>
         </div>
       </div>
 
@@ -203,9 +244,9 @@ function App() {
        
               <div className="detalles">
                 <div className="lugar">
-                  <div>Aula: {aula.aula}</div>
-                  <div>Edificio:{aula.edificio}</div>
-                  <div  style={{ fontSize: '14px' }}>Departamento:{aula.deapartamento}</div>
+                  <div style={{fontSize:'15px' }}> Aula: {aula.aula}</div>
+                  <div style={{fontSize:'15px' }}>Edificio:{aula.edificio}</div>
+                 
                 </div>
                 <div>
                   <div>{aula.diaDeLaSemana}</div>

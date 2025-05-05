@@ -44,7 +44,7 @@ export interface AulaReserva {
   Miércoles: boolean[];
   jueves: boolean[];
   viernes: boolean[];
-  sabado: boolean[];
+  Sábado: boolean[];
   domingo: boolean[];
 }
 
@@ -222,7 +222,7 @@ export const pasarAAulaReservaArrayPorDia = async (files: FileList) => {
         aulaReserva.diaDeLaSemana === reserva.diaReserva
     );
 
-    console.log("estado de aulareserva 252", aulasReserva);
+
 
     if (aulasReserva == undefined || aulasReserva == null) {
       const { edificio, aula, capacidad, diaReserva, perReserva, horaInicioReserva, horaFinReserva } = reserva;
@@ -295,7 +295,7 @@ export const pasarAAulaReservaArrayPorDia = async (files: FileList) => {
             };
           }
           break;
-        case "Sabado":
+        case "Sábado":
           for (
             let i = parseInt(horaInicioReserva);
             i < parseInt(horaFinReserva);
@@ -403,7 +403,7 @@ export const pasarAAulaReservaArrayPorDia = async (files: FileList) => {
             };
           }
           break;
-        case "Sabado":
+        case "Sábado":
           for (
             let i = parseInt(horaInicioReserva);
             i < parseInt(horaFinReserva);
@@ -463,7 +463,7 @@ export const pasarAAulaReservaArray = async (files: FileList) => {
       const Miércoles = new Array(24).fill(false);
       const jueves = new Array(24).fill(false);
       const viernes = new Array(24).fill(false);
-      const sabado = new Array(24).fill(false);
+      const Sábado = new Array(24).fill(false);
       const domingo = new Array(24).fill(false);
 
       aulasReservas.push({
@@ -479,7 +479,7 @@ export const pasarAAulaReservaArray = async (files: FileList) => {
         Miércoles,
         jueves,
         viernes,
-        sabado,
+        Sábado,
         domingo,
       });
     } else {
@@ -530,13 +530,13 @@ export const pasarAAulaReservaArray = async (files: FileList) => {
             aulaReserva.viernes[i] = true;
           }
           break;
-        case "Sabado":
+        case "Sábado":
           for (
             let i = parseInt(horaInicioReserva);
             i < parseInt(horaFinReserva);
             i++
           ) {
-            aulaReserva.sabado[i] = true;
+            aulaReserva.Sábado[i] = true;
           }
           break;
         case "Domingo":
@@ -584,8 +584,8 @@ export const filtroPorDia = (dia: string, arreglo: AulaReserva[]) => {
         return reserva.jueves;
       case "Viernes":
         return reserva.viernes;
-      case "Sabado":
-        return reserva.sabado;
+      case "Sábado":
+        return reserva.Sábado;
       case "Domingo":
         return reserva.domingo;
       default:
@@ -673,8 +673,8 @@ export const filtroPorHoraYDia = (
         return !reserva.jueves[hora];
       case "Viernes":
         return !reserva.viernes[hora];
-      case "Sabado":
-        return !reserva.sabado[hora];
+      case "Sábado":
+        return !reserva.Sábado[hora];
       case "Domingo":
         return !reserva.domingo[hora];
       default:
