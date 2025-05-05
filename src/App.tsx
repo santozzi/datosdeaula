@@ -107,25 +107,15 @@ function App() {
         if (edificio != "") {
           reservasFiltradas = filtrarPorEdificio(edificio, reservasFiltradas);
         } 
-        // console.log("reservasFiltradas", reservasFiltradas);
-        /* 
-        const reservasFiltradasPorAula = filtrarPorAula("1", reservasFiltradas);
-        console.log("reservasFiltradasPorAula", reservasFiltradasPorAula);
-
-        const reservasFiltradasPorDia = filtroPorDia(
-          "Lunes",
-          reservasFiltradasPorAula
-        );
-        console.log("reservasFiltradasPorDia", reservasFiltradasPorDia);
-        setAulas(filtrarPorHora(14,filtrarPorHora(13,filtrarPorHora(12,aula)))); */
+        reservasFiltradas = filtrarPorHoraCheckbox(hora, reservasFiltradas);
         
         const aulaencontrada= reservasFiltradas.filter((aula) => {
           return aula.aula == "16" && aula.diaDeLaSemana == "Miércoles" && aula.edificio == "PALIHUE - COMPLEJO NUEVO";
         })
-        console.log("aulaencontrada", aulaencontrada);
+        console.log("aulaencontrada en app.tsx", aulaencontrada);
         
         if(aulaencontrada != undefined)
-          setAulaReserva(aulaencontrada);
+          setAulaReserva(reservasFiltradas);
       
         
         
@@ -215,6 +205,7 @@ function App() {
                 <div className="lugar">
                   <div>Aula: {aula.aula}</div>
                   <div>Edificio:{aula.edificio}</div>
+                  <div  style={{ fontSize: '14px' }}>Departamento:{aula.deapartamento}</div>
                 </div>
                 <div>
                   <div>{aula.diaDeLaSemana}</div>

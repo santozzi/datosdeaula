@@ -1,20 +1,20 @@
 import * as XLSX from "xlsx";
 import { HorasCheckbox } from "../App";
 
-async function obtenerArchivo(ruta:string) {
+async function obtenerArchivo(ruta: string) {
   const response = await fetch(ruta);
   const arrayBuffer = await response.arrayBuffer();
   const blob = new Blob([arrayBuffer], { type: "application/vnd.ms-excel" });
   return blob;
 }
 export interface aulaSeparadaPorDia {
-    diaDeLaSemana: string;
-    aula: string;
-    edificio: string;
-    periodo: string;
-    capacidad: number;
-    diaReservaArray:PeriodoReserva[];
-
+  diaDeLaSemana: string;
+  aula: string;
+  edificio: string;
+  periodo: string;
+  capacidad: number;
+  diaReservaArray: PeriodoReserva[];
+  deapartamento: string;
 }
 export interface reserva {
   departamento: string;
@@ -54,23 +54,23 @@ export interface AulaReserva {
     date.setHours(hours, minutes, seconds, 0);
     return hours;
   } */
-    const departamento = 0;
-    const anio = 1;
-    const perReserva = 2;
-    const comision = 3;
-    const materiaNumero = 4;
-    const materia = 5;
-    const diaReserva = 8;
-    const horaInicioReserva = 9;
-    const horaFinReserva = 10;
-    const aula = 11;
-    const complejo = 12;
-    const capacidad = 13;
-export const extraerXls = async (file:File ): Promise<unknown[][] | undefined> => {
-    
+const departamento = 0;
+const anio = 1;
+const perReserva = 2;
+const comision = 3;
+const materiaNumero = 4;
+const materia = 5;
+const diaReserva = 8;
+const horaInicioReserva = 9;
+const horaFinReserva = 10;
+const aula = 11;
+const complejo = 12;
+const capacidad = 13;
+export const extraerXls = async (
+  file: File
+): Promise<unknown[][] | undefined> => {
   //const file = await obtenerArchivo(ruta);
 
-  
   if (!file || file == undefined) return;
 
   return new Promise((resolve, reject) => {
@@ -85,6 +85,12 @@ export const extraerXls = async (file:File ): Promise<unknown[][] | undefined> =
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
         resolve(jsonData as unknown[][]);
+        while ((jsonData as any[][])[0][0] !== "Departamento") {
+          jsonData.shift();
+        }
+        if ((jsonData as any[][])[0][0] === "Departamento") {
+          jsonData.shift();
+        }
       } catch (error) {
         reject(error);
       }
@@ -96,11 +102,7 @@ export const extraerXls = async (file:File ): Promise<unknown[][] | undefined> =
   });
 };
 
-
-
-
-
-export const obtenerEdificios = async (files:FileList) => {
+export const obtenerEdificios = async (files: FileList) => {
   const edificios: string[] = [];
 
   const jsonData = await unirExcels(files);
@@ -113,55 +115,42 @@ export const obtenerEdificios = async (files:FileList) => {
     //el primiero es el encabezado
     if (row[complejo] != undefined && row[complejo] !== "s/d") {
       if (!edificios.includes(row[complejo])) {
-        edificios.push(row[12]);
+        edificios.push(row[complejo]);
       }
     }
   });
   return edificios;
-}
+};
 
+export const unirExcels = async (files: FileList) => {
+  let contenedor: unknown[][] = [];
 
-
-
-
-
-
-
-export const unirExcels = async (files:FileList)=> {
-   
-    let contenedor:unknown[][] = [];
-        
-/*     const archivos = [
+  /*     const archivos = [
         "./asignacion_aulas_Anual-2025 (1).xls",
         "./asignacion_aulas_PrimerCuatrimestre-2025 (1).xls",
         "./asignacion_aulas_Semanal-2025 (3).xls",
         "./asignacionaulas2025.xls",
        ]; */
-        for (let i=0 ; i< files.length; i++ ) {
-            //const file = await obtenerArchivo(archivo);
-            if (!files) return;
-            const nuevoExcel = await extraerXls(files[i]);
-         
-            
-            
-            if(!nuevoExcel) return;
-            contenedor = [...contenedor, ...nuevoExcel];
-        }
+  for (let i = 0; i < files.length; i++) {
+    //const file = await obtenerArchivo(archivo);
+    if (!files) return;
+    const nuevoExcel = await extraerXls(files[i]);
 
-    return new Promise<unknown[][]>( (resolve, reject) => {
-        
-            resolve(contenedor);
-    });    
+    if (!nuevoExcel) return;
+    contenedor = [...contenedor, ...nuevoExcel];
+  }
+
+  return new Promise<unknown[][]>((resolve, reject) => {
+    resolve(contenedor);
+  });
 };
 
-export interface PeriodoReserva{
+export interface PeriodoReserva {
   periodo: string;
   reservado: boolean;
-
 }
-export const pasarAReservasArray = async (files:FileList) => {
+export const pasarAReservasArray = async (files: FileList) => {
   const reservas: reserva[] = [];
-
 
   const jsonData = await unirExcels(files);
 
@@ -176,7 +165,7 @@ export const pasarAReservasArray = async (files:FileList) => {
       row[horaInicioReserva] != undefined &&
       row[horaFinReserva] != undefined &&
       row[horaFinReserva].includes(":") &&
-      row[complejo] !== "s/d" 
+      row[complejo] !== "s/d"
     ) {
       const rowData: reserva = {
         departamento: row[departamento],
@@ -215,144 +204,238 @@ export const pasarAReservasArray = async (files:FileList) => {
   return reservas;
 };
 
-export const pasarAAulaReservaArrayPorDia = async (files:FileList) => {
-    const aulasReservas: aulaSeparadaPorDia[] = [];
-    
-    
-    const reservas = await pasarAReservasArray(files);
+export const pasarAAulaReservaArrayPorDia = async (files: FileList) => {
+  const aulasReservas: aulaSeparadaPorDia[] = [];
 
-    
-    if (reservas === undefined) {
-      console.error("No data found");
-      return;
-    }
+  const reservas = await pasarAReservasArray(files);
 
-    reservas.forEach((reserva: reserva) => {
-      const aulasReserva = aulasReservas.find(
-        (aulaReserva) =>
-          aulaReserva.edificio === reserva.edificio &&
-          aulaReserva.aula === reserva.aula &&
-          
-          aulaReserva.diaDeLaSemana === reserva.diaReserva 
-        
-      );
+  if (reservas === undefined) {
+    console.error("No data found");
+    return;
+  }
 
-      
-      if (!aulasReserva) {
-       
-        const { edificio, aula, capacidad,diaReserva, perReserva } = reserva;
+  reservas.forEach((reserva: reserva) => {
+    const aulasReserva = aulasReservas.find(
+      (aulaReserva) =>
+        aulaReserva.edificio === reserva.edificio &&
+        aulaReserva.aula === reserva.aula &&
+        aulaReserva.diaDeLaSemana === reserva.diaReserva
+    );
 
-        const diaReservaArray = new Array(24).fill({periodo:perReserva,reservado:false});
+    console.log("estado de aulareserva 252", aulasReserva);
 
-  
-        aulasReservas.push({
-          edificio,
-          capacidad,
-          diaDeLaSemana: diaReserva,
-          periodo:perReserva,
-          aula,
-          diaReservaArray
- 
-        });
-      } else {
-       
-        const { diaReserva, horaInicioReserva, horaFinReserva } = reserva;
-        aulasReserva.diaDeLaSemana = diaReserva;
-       
-        
-        aulasReserva.aula = reserva.aula;
-        aulasReserva.edificio = reserva.edificio;
-        aulasReserva.capacidad = reserva.capacidad;
-        aulasReserva.periodo = reserva.perReserva;
-        switch (diaReserva) {
-          case "Lunes":
+    if (aulasReserva == undefined || aulasReserva == null) {
+      const { edificio, aula, capacidad, diaReserva, perReserva, horaInicioReserva, horaFinReserva } = reserva;
 
+      const diaReservaArray = new Array(24).fill({
+        periodo: perReserva,
+        reservado: false,
+      });
+      switch (diaReserva) {
+        case "Lunes":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            diaReservaArray[i] = {
+              periodo: perReserva,
+              reservado: true,
+            };
+          }
+          break;
+        case "Martes":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            diaReservaArray[i] = {
+              periodo: perReserva,
+              reservado: true,
+            };
+          }
+          break;
+        case "Miércoles":
+          {
             for (
               let i = parseInt(horaInicioReserva);
               i < parseInt(horaFinReserva);
               i++
             ) {
-                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
+              diaReservaArray[i] = {
+                periodo: perReserva,
+                reservado: true,
+              };
             }
-            break;
-          case "Martes":
-            for (
-              let i = parseInt(horaInicioReserva);
-              i < parseInt(horaFinReserva);
-              i++
-            ) {
-                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
-            }
-            break;
-          case "Miércoles":{
-           
-            for (
-
-              let i = parseInt(horaInicioReserva);
-              i < parseInt(horaFinReserva);
-              i++
-            ) {
-            
-               
-            
-                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
-            }
- /*            if(aulasReserva.aula == '16' && aulasReserva.edificio == 'PALIHUE - COMPLEJO NUEVO'){
-            console.log(aulasReserva.diaReservaArray);
-            } */
-            
-            
           }
 
-            
-            break;
-          case "Jueves":
-            for (
-              let i = parseInt(horaInicioReserva);
-              i < parseInt(horaFinReserva);
-              i++
-            ) {
-                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
-            }
-            break;
-          case "Viernes":
-            for (
-              let i = parseInt(horaInicioReserva);
-              i < parseInt(horaFinReserva);
-              i++
-            ) {
-                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
-            }
-            break;
-          case "Sabado":
-            for (
-              let i = parseInt(horaInicioReserva);
-              i < parseInt(horaFinReserva);
-              i++
-            ) {
-                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
-            }
-            break;
-          case "Domingo":
-            for (
-              let i = parseInt(horaInicioReserva);
-              i < parseInt(horaFinReserva);
-              i++
-            ) {
-                aulasReserva.diaReservaArray[i] = {periodo:aulasReserva.periodo,reservado:true};
-            }
-            break;
-          default:
-            break;
-        }
+          break;
+        case "Jueves":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            diaReservaArray[i] = {
+              periodo: perReserva,
+              reservado: true,
+            };
+          }
+          break;
+        case "Viernes":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            diaReservaArray[i] = {
+              periodo: perReserva,
+              reservado: true,
+            };
+          }
+          break;
+        case "Sabado":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            diaReservaArray[i] = {
+              periodo: perReserva,
+              reservado: true,
+            };
+          }
+          break;
+        case "Domingo":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            diaReservaArray[i] = {
+              periodo: perReserva,
+              reservado: true,
+            };
+          }
+          break;
+        default:
+          break;
       }
-    });
-    return aulasReservas;
-  };
-  
+      aulasReservas.push({
+        edificio,
+        capacidad,
+        deapartamento: reserva.departamento,
+        diaDeLaSemana: diaReserva,
+        periodo: perReserva,
+        aula,
+        diaReservaArray,
+      });
+    } else {
+      const { diaReserva, horaInicioReserva, horaFinReserva } = reserva;
+      aulasReserva.diaDeLaSemana = diaReserva;
 
+      aulasReserva.aula = reserva.aula;
+      aulasReserva.edificio = reserva.edificio;
+      aulasReserva.capacidad = reserva.capacidad;
+      aulasReserva.periodo = reserva.perReserva;
+      switch (diaReserva) {
+        case "Lunes":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            aulasReserva.diaReservaArray[i] = {
+              periodo: aulasReserva.periodo,
+              reservado: true,
+            };
+          }
+          break;
+        case "Martes":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            aulasReserva.diaReservaArray[i] = {
+              periodo: aulasReserva.periodo,
+              reservado: true,
+            };
+          }
+          break;
+        case "Miércoles":
+          {
+            for (
+              let i = parseInt(horaInicioReserva);
+              i < parseInt(horaFinReserva);
+              i++
+            ) {
+              aulasReserva.diaReservaArray[i] = {
+                periodo: aulasReserva.periodo,
+                reservado: true,
+              };
+            }
+          }
 
-export const pasarAAulaReservaArray = async (files:FileList) => {
+          break;
+        case "Jueves":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            aulasReserva.diaReservaArray[i] = {
+              periodo: aulasReserva.periodo,
+              reservado: true,
+            };
+          }
+          break;
+        case "Viernes":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            aulasReserva.diaReservaArray[i] = {
+              periodo: aulasReserva.periodo,
+              reservado: true,
+            };
+          }
+          break;
+        case "Sabado":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            aulasReserva.diaReservaArray[i] = {
+              periodo: aulasReserva.periodo,
+              reservado: true,
+            };
+          }
+          break;
+        case "Domingo":
+          for (
+            let i = parseInt(horaInicioReserva);
+            i < parseInt(horaFinReserva);
+            i++
+          ) {
+            aulasReserva.diaReservaArray[i] = {
+              periodo: aulasReserva.periodo,
+              reservado: true,
+            };
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  });
+  return aulasReservas;
+};
+
+export const pasarAAulaReservaArray = async (files: FileList) => {
   const aulasReservas: AulaReserva[] = [];
   const reservas = await pasarAReservasArray(files);
   if (reservas === undefined) {
@@ -366,7 +449,15 @@ export const pasarAAulaReservaArray = async (files:FileList) => {
         aulaReserva.edificio === reserva.edificio
     );
     if (!aulaReserva) {
-      const { edificio, aula, capacidad, comision, diaReserva,materia,perReserva } = reserva;
+      const {
+        edificio,
+        aula,
+        capacidad,
+        comision,
+        diaReserva,
+        materia,
+        perReserva,
+      } = reserva;
       const lunes = new Array(24).fill(false);
       const martes = new Array(24).fill(false);
       const Miércoles = new Array(24).fill(false);
@@ -381,7 +472,7 @@ export const pasarAAulaReservaArray = async (files:FileList) => {
         comision,
         diaReserva,
         materia,
-        periodo:perReserva,
+        periodo: perReserva,
         aula,
         lunes,
         martes,
@@ -504,68 +595,66 @@ export const filtroPorDia = (dia: string, arreglo: AulaReserva[]) => {
   return reservasFiltradas;
 };
 
-
-
-
 export const filtrarPorHora = (hora: number, arreglo: aulaSeparadaPorDia[]) => {
   const reservasFiltradas = arreglo.filter((reserva) => {
-    return (
-      !reserva.diaReservaArray[hora].reservado
-    );
+    return !reserva.diaReservaArray[hora].reservado;
   });
   return reservasFiltradas;
 };
 
-export const filtrarPorHoraCheckbox = (hora:HorasCheckbox, arreglo: aulaSeparadaPorDia[]) => {
-  let reservasFiltradas:aulaSeparadaPorDia[] = arreglo;
-  if(hora.hora8){
-     reservasFiltradas = filtrarPorHora(8,reservasFiltradas);
+export const filtrarPorHoraCheckbox = (
+  hora: HorasCheckbox,
+  arreglo: aulaSeparadaPorDia[]
+) => {
+  let reservasFiltradas: aulaSeparadaPorDia[] = arreglo;
+  if (hora.hora8) {
+    reservasFiltradas = filtrarPorHora(8, reservasFiltradas);
   }
-  if(hora.hora9){
-     reservasFiltradas = filtrarPorHora(9,reservasFiltradas);
+  if (hora.hora9) {
+    reservasFiltradas = filtrarPorHora(9, reservasFiltradas);
   }
-  if(hora.hora10){
-     reservasFiltradas = filtrarPorHora(10,reservasFiltradas);
+  if (hora.hora10) {
+    reservasFiltradas = filtrarPorHora(10, reservasFiltradas);
   }
-  if(hora.hora11){
-     reservasFiltradas = filtrarPorHora(11,reservasFiltradas);
+  if (hora.hora11) {
+    reservasFiltradas = filtrarPorHora(11, reservasFiltradas);
   }
-  if(hora.hora12){
-     reservasFiltradas = filtrarPorHora(12,reservasFiltradas);
+  if (hora.hora12) {
+    reservasFiltradas = filtrarPorHora(12, reservasFiltradas);
   }
-  if(hora.hora13){
-     reservasFiltradas = filtrarPorHora(13,reservasFiltradas);
+  if (hora.hora13) {
+    reservasFiltradas = filtrarPorHora(13, reservasFiltradas);
   }
-  if(hora.hora14){
-     reservasFiltradas = filtrarPorHora(14,reservasFiltradas);
+  if (hora.hora14) {
+    reservasFiltradas = filtrarPorHora(14, reservasFiltradas);
   }
-  if(hora.hora15){
-     reservasFiltradas = filtrarPorHora(15,reservasFiltradas);
+  if (hora.hora15) {
+    reservasFiltradas = filtrarPorHora(15, reservasFiltradas);
   }
-  if(hora.hora16){
-     reservasFiltradas = filtrarPorHora(16,reservasFiltradas);
+  if (hora.hora16) {
+    reservasFiltradas = filtrarPorHora(16, reservasFiltradas);
   }
-  if(hora.hora17){
-     reservasFiltradas = filtrarPorHora(17,reservasFiltradas);
+  if (hora.hora17) {
+    reservasFiltradas = filtrarPorHora(17, reservasFiltradas);
   }
-  if(hora.hora18){
-     reservasFiltradas = filtrarPorHora(18,reservasFiltradas);
+  if (hora.hora18) {
+    reservasFiltradas = filtrarPorHora(18, reservasFiltradas);
   }
-  if(hora.hora19){
-     reservasFiltradas = filtrarPorHora(19,reservasFiltradas);
+  if (hora.hora19) {
+    reservasFiltradas = filtrarPorHora(19, reservasFiltradas);
   }
-  if(hora.hora20){
-     reservasFiltradas = filtrarPorHora(20,reservasFiltradas);
+  if (hora.hora20) {
+    reservasFiltradas = filtrarPorHora(20, reservasFiltradas);
   }
-  if(hora.hora21){
-     reservasFiltradas = filtrarPorHora(21,reservasFiltradas);
+  if (hora.hora21) {
+    reservasFiltradas = filtrarPorHora(21, reservasFiltradas);
   }
-  if(hora.hora22){
-     reservasFiltradas = filtrarPorHora(22,reservasFiltradas);
+  if (hora.hora22) {
+    reservasFiltradas = filtrarPorHora(22, reservasFiltradas);
   }
 
-  return reservasFiltradas
-}
+  return reservasFiltradas;
+};
 
 export const filtroPorHoraYDia = (
   hora: number,
@@ -595,11 +684,11 @@ export const filtroPorHoraYDia = (
   return reservasFiltradas;
 };
 export const filtrarPorPeriodo = (
-    periodo: string,
-    arreglo: aulaSeparadaPorDia[]
-    ) => {
-    const reservasFiltradas = arreglo.filter(
-        (reserva) => reserva.periodo === periodo
-    );
-    return reservasFiltradas;
-    }
+  periodo: string,
+  arreglo: aulaSeparadaPorDia[]
+) => {
+  const reservasFiltradas = arreglo.filter(
+    (reserva) => reserva.periodo === periodo
+  );
+  return reservasFiltradas;
+};
