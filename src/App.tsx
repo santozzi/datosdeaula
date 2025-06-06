@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import logo from "./assets/logo.png";
 import "./App.css";
 
 /* import { Rangos } from './components/Rangos'
@@ -127,7 +128,15 @@ function App() {
   }, [hora, files,edificio]);
 
   return (
+    <> <header>
+        <div className="logo"><img src={logo} alt="logo" /></div>
+        <h1>Aula Libre !!</h1>
+        
+      </header>
+      <main>
     <div className="container-principal">
+     
+
       {/*      <RangosHeader />
      <Rangos /> */}
      
@@ -234,7 +243,7 @@ function App() {
           </div>
         </div>
       </div>
-
+     
       {files != null &&
         aulaReserva.map((aula: aulaSeparadaPorDia, index) => {
           return (
@@ -289,6 +298,8 @@ function App() {
           );
         })}
     </div>
+    </main>
+    </>
   );
 }
 
